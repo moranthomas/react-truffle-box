@@ -7,8 +7,9 @@ import "./App.css";
 class App extends Component {
 
   state = {
-    storageValue: 0,
-    tempValue: 0,
+    storageValue: '',
+    tempValue: '',
+    setValue: '',
     web3: null,
     accounts: null,
     contract: null
@@ -68,20 +69,8 @@ class App extends Component {
   };
 
 
-  setAmount(event) {
-    event.preventDefault();
-    let self = this;
-    const { accounts, contract } = this.state;
-    var value = event.target.value;
-    // await contract.methods.set(value).send({ from: accounts[0] });
-    this.state.contract.methods.set(value).send({ from: accounts[0] })
-    .then(function(result) {
-        console.log("Successfully incremented balance : " + JSON.stringify(result));
-        self.setState({ storageValue: value });
-    });
 
-  }
-
+  // Use ES7 async / await for dealing with Promises in a more elegant way.
   incrementAmount = async(event) => {
     event.preventDefault();
     const { accounts, contract } = this.state;
@@ -92,7 +81,6 @@ class App extends Component {
 
     await contract.methods.set(value).send({ from: accounts[0] });
     // Get the value from the contract to prove it worked.
-
     const response = await contract.methods.get().call();
     // Update state with the result.
     this.setState({ storageValue: response });
@@ -102,6 +90,25 @@ class App extends Component {
     event.preventDefault();
     var value = event.target.value;
     this.setState({ tempValue: value });
+  }
+
+  handleSetAmount = async(event) => {
+    event.preventDefault();
+    var value = event.target.value;
+    this.setState({ setValue: value });
+  }
+
+  setAmount = async(event) => {
+    event.preventDefault();
+    const { accounts, contract } = this.state;
+    var setValue = Number(this.state.setValue);
+
+    // Always use arrow functions to avoid scoping and 'this' issues like having to use 'self'
+    await contract.methods.set(setValue).send({ from: accounts[0] })
+    const response = await contract.methods.get().call();
+    // Update state with the result.
+    this.setState({ storageValue: response });
+
   }
 
   render() {
@@ -118,7 +125,7 @@ class App extends Component {
         <p>Your Truffle Box is installed and ready.</p>
         <h2>Smart Contract Example</h2>
           <form>
-              <div className="form-control">
+              <div style = {accountsStyle} className="row">
                   <label htmlFor="text">Add Amount: </label>
                   <input style={inputStyle} type="text" value={this.state.value}  onChange={this.handleChangeAmount.bind(this)}
                   placeholder="Enter Amount ...">
@@ -126,9 +133,9 @@ class App extends Component {
                   <button id="Set Bal" onClick={this.incrementAmount.bind(this)}>Increment Amount</button>
               </div>
 
-              <div className="form-control">
+              <div style = {accountsStyle} className="row">
                 <label htmlFor="text">New Amount: </label>
-                <input style={inputStyle} type="text" value={this.state.value}  onChange={this.handleChangeAmount.bind(this)}
+                <input style={inputStyle} type="text" value={this.state.setValue}  onChange={this.handleSetAmount.bind(this)}
                 placeholder="Enter Amount ...">
                 </input>
                 <button id="Set Bal" onClick={this.setAmount.bind(this)}>Set Amount</button>
